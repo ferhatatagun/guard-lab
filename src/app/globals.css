@@ -1,26 +1,77 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+  --bg: #08080a;
+  --bg-elev: #101015;
+  --bg-elev-2: #16161c;
+  --border: #232329;
+  --border-strong: #34343c;
+  --fg: #ededee;
+  --fg-muted: #9a9aa3;
+  --fg-faint: #5e5e66;
+
+  /* guard-lab sits at the violet end of the suite. perf-lab is the cool
+     measurement instrument; this is the one that finds things wrong. */
+  --accent: #b08bf0;
+  --accent-dim: #7a5fb0;
+
+  --good: #7cd3a3;
+  --average: #f0c66b;
+  --poor: #f07c7c;
+
+  /* The three severities carry the whole argument, so they have to separate
+     at a glance and stay ordered in greyscale: silent is the heaviest. */
+  --sev-silent: #f07c7c;
+  --sev-crash: #f0c66b;
+  --sev-recovered: #7cc4f0;
+  --sev-clean: #7cd3a3;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-bg-elev: var(--bg-elev);
+  --color-bg-elev-2: var(--bg-elev-2);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-faint: var(--fg-faint);
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-good: var(--good);
+  --color-average: var(--average);
+  --color-poor: var(--poor);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-feature-settings: "cv11", "ss01", "ss03";
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-image:
+    radial-gradient(1200px 600px at 80% -10%, rgba(176, 139, 240, 0.05), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(124, 196, 240, 0.04), transparent 60%);
+  background-attachment: fixed;
+}
+
+::selection { background: rgba(176, 139, 240, 0.25); color: var(--fg); }
+
+textarea, input, select { font-family: inherit; }
+
+/* Counters tick up during a run; without tabular figures the column twitches
+   on every completed request. */
+.tnum { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
