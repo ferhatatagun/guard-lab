@@ -50,13 +50,6 @@ export default function Home() {
   const [expanded, setExpanded] = useState<FailureKind | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // ?demo opens straight into the sample run, so a link from a portfolio card
-  // or a README lands the reader on something working rather than an empty
-  // form asking for an API key before it will show them anything.
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("demo")) loadDemo();
-  }, [loadDemo]);
-
   const schema = useMemo<{ ok: Schema } | { err: string }>(() => {
     try {
       return { ok: parseSchema(schemaText) };
@@ -74,6 +67,13 @@ export default function Home() {
     setDone(DEMO_RESPONSES.length);
     setIsDemo(true);
   }, []);
+
+  // ?demo opens straight into the sample run, so a link from a portfolio card
+  // or a README lands the reader on something working rather than an empty
+  // form asking for an API key before it will show them anything.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("demo")) loadDemo();
+  }, [loadDemo]);
 
   const start = useCallback(async () => {
     if (!("ok" in schema) || !apiKey.trim()) return;
