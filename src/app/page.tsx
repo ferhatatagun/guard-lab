@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   classify,
   KIND_LABEL,
@@ -49,6 +49,13 @@ export default function Home() {
   const [isDemo, setIsDemo] = useState(false);
   const [expanded, setExpanded] = useState<FailureKind | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // ?demo opens straight into the sample run, so a link from a portfolio card
+  // or a README lands the reader on something working rather than an empty
+  // form asking for an API key before it will show them anything.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("demo")) loadDemo();
+  }, [loadDemo]);
 
   const schema = useMemo<{ ok: Schema } | { err: string }>(() => {
     try {
