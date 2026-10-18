@@ -106,6 +106,12 @@ export async function callOnce(opts: CallOptions): Promise<string> {
 	}
 
 	const body = await res.json();
+	// A safeguard refusal comes back as HTTP 200 with no content. Counting it as
+	// "unparseable output" would blame the model's formatting for a decision it
+	// didn't make about formatting, so surface it as a failed request instead.
+	if (body?.stop_reason === 'refusal') {
+		throw new ApiError('The model declined this prompt (stop_reason: refusal).');
+	}
 	const text = (body?.content ?? [])
 		.filter((b: { type?: string }) => b?.type === 'text')
 		.map((b: { text?: string }) => b.text ?? '')
