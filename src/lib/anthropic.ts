@@ -10,13 +10,34 @@ import { describeField, exampleFor, type Schema } from './schema';
  * nothing can be installed and the data can't leave.
  */
 
+/**
+ * `sampling: false` means the model rejects temperature / top_p / top_k with a
+ * 400, so the request leaves them out and runs at the model's fixed default.
+ * The two older models stay in the list because they are the ones where
+ * temperature can still be varied.
+ */
 export const MODELS = [
-	{ id: 'claude-sonnet-5', label: 'Sonnet 5' },
-	{ id: 'claude-opus-5', label: 'Opus 5' },
-	{ id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5' }
+	{ id: 'claude-sonnet-5-5', label: 'Sonnet 5.5', sampling: false },
+	{ id: 'claude-opus-5-5', label: 'Opus 5.5', sampling: false },
+	{ id: 'claude-haiku-5-5', label: 'Haiku 5.5', sampling: false },
+	{ id: 'claude-sonnet-4-6', label: 'Sonnet 4.6', sampling: true },
+	{ id: 'claude-haiku-4-5', label: 'Haiku 4.5', sampling: true }
 ] as const;
 
 export type ModelId = (typeof MODELS)[number]['id'];
+
+export const DEFAULT_MODEL: ModelId = MODELS[0].id;
+
+export function supportsSampling(id: ModelId): boolean {
+	return MODELS.find((m) => m.id === id)?.sampling ?? false;
+}
+
+/**
+ * Room for models that think by default: thinking tokens count against
+ * max_tokens, and a reply cut off mid-JSON would be reported as a model
+ * failure when it is really this tool's budget.
+ */
+const MAX_TOKENS = 4096;
 
 export class ApiError extends Error {}
 
@@ -60,8 +81,8 @@ export async function callOnce(opts: CallOptions): Promise<string> {
 		signal: opts.signal,
 		body: JSON.stringify({
 			model: opts.model,
-			max_tokens: 1024,
-			temperature: opts.temperature,
+			max_tokens: MAX_TOKENS,
+			temperature: supportsSampling(opts.model) ? opts.temperature : undefined,
 			messages: [
 				{
 					role: 'user',
@@ -85,6 +106,12 @@ export async function callOnce(opts: CallOptions): Promise<string> {
 	}
 
 	const body = await res.json();
+	// A safeguard refusal comes back as HTTP 200 with no content. Counting it as
+	// "unparseable output" would blame the model's formatting for a decision it
+	// didn't make about formatting, so surface it as a failed request instead.
+	if (body?.stop_reason === 'refusal') {
+		throw new ApiError('The model declined this prompt (stop_reason: refusal).');
+	}
 	const text = (body?.content ?? [])
 		.filter((b: { type?: string }) => b?.type === 'text')
 		.map((b: { text?: string }) => b.text ?? '')

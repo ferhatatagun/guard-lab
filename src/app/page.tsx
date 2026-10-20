@@ -13,7 +13,7 @@ import {
 import { parseSchema, SchemaError, type Schema } from "@/lib/schema";
 import { failureRate, formatCount, formatRate, runsToRuleOut } from "@/lib/stats";
 import { DEMO_PROMPT, DEMO_RESPONSES, DEMO_SCHEMA } from "@/lib/demo";
-import { MODELS, runBatch, type ModelId } from "@/lib/anthropic";
+import { DEFAULT_MODEL, MODELS, runBatch, supportsSampling, type ModelId } from "@/lib/anthropic";
 
 const SEV_COLOR: Record<Severity, string> = {
   silent: "var(--sev-silent)",
@@ -37,7 +37,7 @@ export default function Home() {
   const [schemaText, setSchemaText] = useState(DEMO_SCHEMA);
   const [prompt, setPrompt] = useState(DEMO_PROMPT);
   const [apiKey, setApiKey] = useState("");
-  const [model, setModel] = useState<ModelId>("claude-sonnet-5");
+  const [model, setModel] = useState<ModelId>(DEFAULT_MODEL);
   const [runs, setRuns] = useState(50);
   const [temperature, setTemperature] = useState(1);
   const [callsPerDay, setCallsPerDay] = useState(1000);
@@ -246,7 +246,9 @@ export default function Home() {
               </div>
               <label className="flex flex-col gap-1.5">
                 <span className="tnum text-xs text-[var(--fg-faint)]">
-                  Temperature {temperature.toFixed(1)}
+                  {supportsSampling(model)
+                    ? `Temperature ${temperature.toFixed(1)}`
+                    : "Temperature fixed by model (default sampling)"}
                 </span>
                 <input
                   type="range"
@@ -255,7 +257,8 @@ export default function Home() {
                   step={0.1}
                   value={temperature}
                   onChange={(e) => setTemperature(+e.target.value)}
-                  className="accent-[var(--accent)]"
+                  disabled={!supportsSampling(model)}
+                  className="accent-[var(--accent)] disabled:opacity-40"
                 />
               </label>
 
